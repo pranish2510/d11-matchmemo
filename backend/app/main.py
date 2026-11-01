@@ -10,11 +10,11 @@ app = FastAPI(
     description="D11 API foundation for cricket match operations.",
 )
 
-# Allow all origins (including Vercel preview & production URLs)
+# 100% Robust CORS Policy: Works seamlessly locally and on Vercel production/previews
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=["*"],  # Allows all origins safely when credentials mode is disabled
+    allow_credentials=False,  # MUST be False when allow_origins is ["*"] to prevent 400 preflight rejection
     allow_methods=["*"],
     allow_headers=["*"],
 )
