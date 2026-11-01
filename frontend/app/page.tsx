@@ -2,7 +2,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000")
+  .trim()
+  .replace(/\/health\/?$/, "")
+  .replace(/\/+$/, "");
 
 function FlagIND({ className = "h-5 w-7" }: { className?: string }) {
   return (
@@ -147,6 +150,16 @@ const PLAYER_CAREER_PROFILES: Record<string, { role: string; statsEn: string; st
     role: "Australia Pace Ace",
     statsEn: "🎯 **Pat Cummins (AUS):** World-class leader; 60+ T20I wickets with back-of-a-length cutters and consecutive T20 WC hat-tricks!",
     statsHi: "🎯 **पैट कमिंस (AUS):** T20 वर्ल्ड कप में लगातार दो हैट्रिक लेने वाले विश्वस्तरीय तेज गेंदबाज!",
+  },
+  hazlewood: {
+    role: "Australia Line & Length Seamer",
+    statsEn: "🛡️ **Josh Hazlewood (AUS):** Test-match metronome in T20s; 60+ T20I wickets with relentless bounce, seam movement, and dot-ball pressure in the Powerplay.",
+    statsHi: "🛡️ **जोश हेज़लवुड (AUS):** सटीक लाइन-लेंथ और उछाल से पावरप्ले में डॉट गेंदों का दबाव बनाने वाले पेसर।",
+  },
+  stoinis: {
+    role: "Australia Power All-Rounder",
+    statsEn: "💪 **Marcus Stoinis (AUS):** 1,100+ T20I runs (SR 148+) and heavy-ball medium pace with golden-arm partnership breakers.",
+    statsHi: "💪 **मार्कस स्टोइनिस (AUS):** 148+ स्ट्राइक रेट वाले फिनिशर और साझेदारी तोड़ने वाले ऑलराउंडर।",
   },
   zampa: {
     role: "Australia Leg-Spinner",
