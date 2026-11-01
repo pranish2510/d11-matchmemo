@@ -65,106 +65,205 @@ interface FantasyPlayerDelta {
   breakdownHi: string;
 }
 
-const PLAYER_CAREER_PROFILES: Record<string, { role: string; statsEn: string; statsHi: string }> = {
+interface BatterScorecardRow {
+  name: string;
+  runs: number;
+  balls: number;
+  fours: number;
+  sixes: number;
+  sr: string;
+  status: "batting" | "out" | "dnb";
+  isStriker: boolean;
+  dismissalText: string;
+}
+
+interface BowlerScorecardRow {
+  name: string;
+  overs: string;
+  balls: number;
+  runs: number;
+  wickets: number;
+  dots: number;
+  econ: string;
+}
+
+interface FullInningsCard {
+  innings: 1 | 2;
+  teamName: string;
+  teamShort: string;
+  totalRuns: number;
+  totalWickets: number;
+  oversDisplay: string;
+  crr: string;
+  batters: BatterScorecardRow[];
+  bowlers: BowlerScorecardRow[];
+  fallOfWickets: { score: string; player: string; over: string }[];
+}
+
+const IND_SQUAD = ["R. Sharma", "V. Kohli", "R. Pant", "S. Yadav", "S. Dube", "H. Pandya", "R. Jadeja", "A. Patel", "K. Yadav", "J. Bumrah", "A. Singh"];
+const AUS_SQUAD = ["T. Head", "D. Warner", "M. Marsh", "G. Maxwell", "M. Stoinis", "T. David", "M. Wade", "P. Cummins", "M. Starc", "J. Hazlewood", "A. Zampa"];
+
+const PLAYER_CAREER_PROFILES: Record<string, { fullName: string; shortName: string; role: string; statsEn: string; statsHi: string }> = {
   rohit: {
+    fullName: "Rohit Sharma",
+    shortName: "R. Sharma",
     role: "India Captain • Opening Batter",
     statsEn: "🏏 **Rohit Sharma (IND Captain):** 4,100+ T20I runs (Most in T20I history), 5 T20I Centuries (World Record), Strike Rate ~140. Known as 'Hitman' for his effortless pull shots and powerplay dominance.",
     statsHi: "🏏 **रोहित शर्मा (कप्तान):** T20I इतिहास में सर्वाधिक 4,100+ रन और 5 शतक (वर्ल्ड रिकॉर्ड), स्ट्राइक रेट ~140। पावरप्ले में छक्कों की बारिश करने के लिए मशहूर!",
   },
+  sharma: {
+    fullName: "Rohit Sharma",
+    shortName: "R. Sharma",
+    role: "India Captain • Opening Batter",
+    statsEn: "🏏 **Rohit Sharma (IND Captain):** 4,100+ T20I runs, 5 T20I Centuries, Strike Rate ~140.",
+    statsHi: "🏏 **रोहित शर्मा (कप्तान):** T20I इतिहास में सर्वाधिक 4,100+ रन और 5 शतक।",
+  },
   kohli: {
+    fullName: "Virat Kohli",
+    shortName: "V. Kohli",
     role: "India Top-Order Batter",
     statsEn: "👑 **Virat Kohli (IND):** 4,000+ T20I runs at an iconic average of 49+, SR 137+. Greatest big-match chaser in T20 World Cup history.",
-    statsHi: "👑 **विराट कोहली:** 4,000+ T20I रन, 49+ का शानदार औसत। बड़े मैचों और रन-चेज़ के सबसे बड़े मैच-विनर!",
+    statsHi: "👑 **विराट कोहली:** 4,000+ T20I रन, 49+ का शानदार औसत। बड़े मैचों के सबसे बड़े मैच-विनर!",
+  },
+  virat: {
+    fullName: "Virat Kohli",
+    shortName: "V. Kohli",
+    role: "India Top-Order Batter",
+    statsEn: "👑 **Virat Kohli (IND):** 4,000+ T20I runs at an iconic average of 49+, SR 137+.",
+    statsHi: "👑 **विराट कोहली:** 4,000+ T20I रन, 49+ का शानदार औसत।",
   },
   pant: {
+    fullName: "Rishabh Pant",
+    shortName: "R. Pant",
     role: "India Wicketkeeper-Batter",
     statsEn: "⚡ **Rishabh Pant (IND WK):** Fearless left-handed #3 counter-attacker; 1,150+ T20I runs, famous for one-handed sixes and reverse-scoops.",
     statsHi: "⚡ **ऋषभ पंत:** आक्रामक विकेटकीपर-बल्लेबाज, अपने एक हाथ के छक्कों और रिवर्स-स्कूप शॉट्स के लिए प्रसिद्ध।",
   },
   surya: {
+    fullName: "Suryakumar Yadav",
+    shortName: "S. Yadav",
     role: "India 360° Middle-Order Batter",
     statsEn: "🔥 **Suryakumar Yadav (SKY):** #1 ranked ICC T20I batter; 2,300+ T20I runs at an astonishing Strike Rate of 168+, 4 T20I centuries.",
     statsHi: "🔥 **सूर्यकुमार यादव (SKY):** 168+ के तूफानी स्ट्राइक रेट और 4 T20I शतकों के साथ दुनिया के नंबर-1 360-डिग्री T20 बल्लेबाज!",
   },
   pandya: {
+    fullName: "Hardik Pandya",
+    shortName: "H. Pandya",
     role: "India Vice-Captain • Pace All-Rounder",
     statsEn: "💪 **Hardik Pandya (IND):** Premier clutch seam all-rounder; 1,500+ T20I runs (SR 141+) & 80+ T20I wickets. Thrives in overs 16–20.",
-    statsHi: "💪 **हार्दिक पांड्या:** भारत के प्रमुख ऑलराउंडर; 1,500+ T20I रन और 80+ विकेट। डेथ ओवर्स में बड़े छक्के और विकेट लेने में माहिर।",
+    statsHi: "💪 **हार्दिक पांड्या:** भारत के प्रमुख ऑलराउंडर; 1,500+ T20I रन और 80+ विकेट।",
+  },
+  hardik: {
+    fullName: "Hardik Pandya",
+    shortName: "H. Pandya",
+    role: "India Vice-Captain • Pace All-Rounder",
+    statsEn: "💪 **Hardik Pandya (IND):** 1,500+ T20I runs (SR 141+) & 80+ T20I wickets.",
+    statsHi: "💪 **हार्दिक पांड्या:** भारत के प्रमुख ऑलराउंडर; 1,500+ T20I रन और 80+ विकेट।",
   },
   dube: {
+    fullName: "Shivam Dube",
+    shortName: "S. Dube",
     role: "India Middle-Order Power Hitter",
     statsEn: "💥 **Shivam Dube (IND):** Middle-overs spin basher; career T20I SR 135+, known for launching leg-spinners into the stands.",
     statsHi: "💥 **शिवम दुबे:** मिडिल ओवर्स में स्पिनर्स के खिलाफ लंबे छक्के जड़ने वाले पावर-हिटर (SR 135+)।",
   },
   jadeja: {
+    fullName: "Ravindra Jadeja",
+    shortName: "R. Jadeja",
     role: "India Spin All-Rounder",
-    statsEn: "🗡️ **Ravindra Jadeja (IND):** Elite 3D all-rounder; 500+ T20I runs, 50+ wickets at an economy under 7.2, and gun fielder.",
+    statsEn: "🗡️ **Ravindra Jadeja (IND):** Elite 3D all-rounder; 500+ T20I runs, 50+ wickets at an economy under 7.2.",
     statsHi: "🗡️ **रवींद्र जडेजा:** सटीक स्पिन, डेथ ओवर्स में तेज़ रन और दुनिया के सर्वश्रेष्ठ फील्डरों में से एक।",
   },
   bumrah: {
+    fullName: "Jasprit Bumrah",
+    shortName: "J. Bumrah",
     role: "India Spearhead Fast Bowler",
     statsEn: "🎯 **Jasprit Bumrah (IND):** Generational pace spearhead; 85+ T20I wickets at a historic economy rate of ~6.30! Unplayable yorkers and slower off-cutters.",
-    statsHi: "🎯 **जसप्रीत बुमराह:** दुनिया के सबसे खतरनाक तेज गेंदबाज; ~6.30 की अद्भुत इकॉनमी और 85+ T20I विकेट। यॉर्कर और स्लोअर कटर के जादूगर!",
+    statsHi: "🎯 **जसप्रीत बुमराह:** दुनिया के सबसे खतरनाक तेज गेंदबाज; ~6.30 की अद्भुत इकॉनमी और 85+ T20I विकेट।",
   },
   kuldeep: {
+    fullName: "Kuldeep Yadav",
+    shortName: "K. Yadav",
     role: "India Left-Arm Wrist Spinner",
     statsEn: "🌀 **Kuldeep Yadav (IND):** Left-arm chinaman match-winner; 65+ T20I wickets at an average under 14.5 and economy ~6.7!",
-    statsHi: "🌀 **कुलदीप यादव:** चाइनामैन स्पिनर; 14.5 से कम के औसत से 65+ T20I विकेट। मिडिल ओवर्स में गुगली से बड़े विकेट चटकाने में उस्ताद।",
+    statsHi: "🌀 **कुलदीप यादव:** चाइनामैन स्पिनर; 14.5 से कम के औसत से 65+ T20I विकेट।",
   },
   arshdeep: {
+    fullName: "Arshdeep Singh",
+    shortName: "A. Singh",
     role: "India Left-Arm Swing/Death Bowler",
     statsEn: "⚡ **Arshdeep Singh (IND):** 75+ T20I wickets (SR ~13.2); swings the new ball in Over 1 and nails wide yorkers at the death.",
     statsHi: "⚡ **अर्शदीप सिंह:** नई गेंद से स्विंग और डेथ ओवर्स में यॉर्कर डालने वाले बाएं हाथ के स्ट्राइक गेंदबाज (75+ T20I विकेट)।",
   },
   axar: {
+    fullName: "Axar Patel",
+    shortName: "A. Patel",
     role: "India Left-Arm Spin All-Rounder",
     statsEn: "🛡️ **Axar Patel (IND):** High-accuracy left-arm orthodox spinner; 55+ T20I wickets (Econ 7.2) plus electric boundary fielding.",
     statsHi: "🛡️ **अक्षर पटेल:** किफायती स्पिन गेंदबाजी और बाउंड्री पर अद्भुत फील्डिंग करने वाले ऑलराउंडर।",
   },
   head: {
+    fullName: "Travis Head",
+    shortName: "T. Head",
     role: "Australia Explosive Opener",
     statsEn: "🚨 **Travis Head (AUS):** Fearless opener with T20I SR 155+; brutally attacks length balls through the off-side and cow corner.",
     statsHi: "🚨 **ट्रेविस हेड (AUS):** भारत के खिलाफ बड़े मैचों में सबसे खतरनाक बल्लेबाज; 155+ का T20I स्ट्राइक रेट!",
   },
   warner: {
+    fullName: "David Warner",
+    shortName: "D. Warner",
     role: "Australia Veteran Opener",
     statsEn: "🦘 **David Warner (AUS):** 3,100+ T20I runs, 2021 T20 World Cup Player of the Tournament; legendary dynamism in the Powerplay.",
     statsHi: "🦘 **डेविड वॉर्नर (AUS):** 3,100+ T20I रन, ऑस्ट्रेलिया के सबसे अनुभवी और विस्फोटक ओपनर।",
   },
   marsh: {
+    fullName: "Mitchell Marsh",
+    shortName: "M. Marsh",
     role: "Australia Captain • All-Rounder",
     statsEn: "💥 **Mitchell Marsh (AUS Captain):** 1,500+ T20I runs at SR 135+; dominant puller of fast bowling at #3.",
     statsHi: "💥 **मिचेल मार्श (AUS कप्तान):** नंबर-3 पर तेज गेंदबाजों के खिलाफ लंबे छक्के लगाने वाले ताकतवर बल्लेबाज।",
   },
   maxwell: {
+    fullName: "Glenn Maxwell",
+    shortName: "G. Maxwell",
     role: "Australia X-Factor All-Rounder",
     statsEn: "⚡ **Glenn Maxwell (AUS):** 'The Big Show' — 2,500+ T20I runs at SR 154+ and 5 T20I centuries!",
     statsHi: "⚡ **ग्लेन मैक्सवेल (AUS):** 154+ के स्ट्राइक रेट और 5 T20I शतकों वाले 'बिग शो'!",
   },
   starc: {
+    fullName: "Mitchell Starc",
+    shortName: "M. Starc",
     role: "Australia Left-Arm Express Pacer",
     statsEn: "🔥 **Mitchell Starc (AUS):** 145+ kph left-arm lethal inswing bowler; 75+ T20I wickets.",
     statsHi: "🔥 **मिचेल स्टार्क (AUS):** 145+ किमी/घंटा की रफ्तार और खतरनाक इनस्विंग यॉर्कर डालने वाले पेसर।",
   },
   cummins: {
+    fullName: "Pat Cummins",
+    shortName: "P. Cummins",
     role: "Australia Pace Ace",
     statsEn: "🎯 **Pat Cummins (AUS):** World-class leader; 60+ T20I wickets with back-of-a-length cutters and consecutive T20 WC hat-tricks!",
     statsHi: "🎯 **पैट कमिंस (AUS):** T20 वर्ल्ड कप में लगातार दो हैट्रिक लेने वाले विश्वस्तरीय तेज गेंदबाज!",
   },
-  hazlewood: {
-    role: "Australia Line & Length Seamer",
-    statsEn: "🛡️ **Josh Hazlewood (AUS):** Test-match metronome in T20s; 60+ T20I wickets with relentless bounce, seam movement, and dot-ball pressure in the Powerplay.",
-    statsHi: "🛡️ **जोश हेज़लवुड (AUS):** सटीक लाइन-लेंथ और उछाल से पावरप्ले में डॉट गेंदों का दबाव बनाने वाले पेसर।",
-  },
-  stoinis: {
-    role: "Australia Power All-Rounder",
-    statsEn: "💪 **Marcus Stoinis (AUS):** 1,100+ T20I runs (SR 148+) and heavy-ball medium pace with golden-arm partnership breakers.",
-    statsHi: "💪 **मार्कस स्टोइनिस (AUS):** 148+ स्ट्राइक रेट वाले फिनिशर और साझेदारी तोड़ने वाले ऑलराउंडर।",
-  },
   zampa: {
+    fullName: "Adam Zampa",
+    shortName: "A. Zampa",
     role: "Australia Leg-Spinner",
     statsEn: "🌀 **Adam Zampa (AUS):** Australia's all-time leading T20I wicket-taker (100+ T20I wickets, Econ ~7.2).",
     statsHi: "🌀 **एडम ज़म्पा (AUS):** 100+ T20I विकेट लेने वाले ऑस्ट्रेलिया के सबसे सफल लेग स्पिनर।",
+  },
+  hazlewood: {
+    fullName: "Josh Hazlewood",
+    shortName: "J. Hazlewood",
+    role: "Australia Line & Length Seamer",
+    statsEn: "🛡️ **Josh Hazlewood (AUS):** Test-match metronome in T20s; 60+ T20I wickets (Econ ~7.5) with relentless seam movement, steep bounce, and dot-ball pressure in the Powerplay.",
+    statsHi: "🛡️ **जोश हेज़लवुड (AUS):** सटीक लाइन-लेंथ, सीम मूवमेंट और उछाल से पावरप्ले में डॉट गेंदों का दबाव बनाने वाले पेसर।",
+  },
+  stoinis: {
+    fullName: "Marcus Stoinis",
+    shortName: "M. Stoinis",
+    role: "Australia Power All-Rounder",
+    statsEn: "💪 **Marcus Stoinis (AUS):** 1,100+ T20I runs (SR 148+) and 45+ T20I wickets (IPL bowling avg ~28.5, Econ ~9.2) using heavy-ball cutters and golden-arm partnership breakers.",
+    statsHi: "💪 **मार्कस स्टोइनिस (AUS):** 148+ स्ट्राइक रेट वाले फिनिशर और स्लोअर बाउंसर/कटर से साझेदारी तोड़ने वाले ऑलराउंडर।",
   },
 };
 
@@ -320,6 +419,123 @@ function build40OverMatchScript(): BallEvent[] {
 
 const ALL_MATCH_EVENTS = build40OverMatchScript();
 
+// Helper to build a Complete Ball-1-to-Current-Ball Scorecard for any Innings
+function computeInningsFullCard(inningsNum: 1 | 2, upToGlobalIdx: number): FullInningsCard {
+  const squad = inningsNum === 1 ? IND_SQUAD : AUS_SQUAD;
+  const events = ALL_MATCH_EVENTS.filter((e) => e.innings === inningsNum && e.index <= upToGlobalIdx);
+
+  const totalRuns = events.reduce((s, e) => s + e.runs, 0);
+  const totalWickets = events.filter((e) => e.isWicket).length;
+  const legalBalls = events.length;
+  const oversDisplay = `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
+  const crr = legalBalls > 0 ? ((totalRuns / legalBalls) * 6).toFixed(2) : "0.00";
+
+  const lastBall = events[events.length - 1];
+  const activeStriker = lastBall ? lastBall.batter : squad[0];
+  const activeNonStriker = lastBall ? lastBall.nonStriker : squad[1];
+
+  const bMap = new Map<
+    string,
+    { runs: number; balls: number; fours: number; sixes: number; out: boolean; dismissalText: string; appeared: boolean }
+  >();
+  squad.forEach((name) =>
+    bMap.set(name, { runs: 0, balls: 0, fours: 0, sixes: 0, out: false, dismissalText: "yet to bat", appeared: false })
+  );
+
+  const fallOfWickets: { score: string; player: string; over: string }[] = [];
+  let runningRuns = 0;
+  let runningWkts = 0;
+
+  events.forEach((ev) => {
+    runningRuns += ev.runs;
+    const st = bMap.get(ev.batter) || {
+      runs: 0,
+      balls: 0,
+      fours: 0,
+      sixes: 0,
+      out: false,
+      dismissalText: "",
+      appeared: true,
+    };
+    st.appeared = true;
+    st.runs += ev.runs;
+    st.balls += 1;
+    if (ev.runs === 4) st.fours += 1;
+    if (ev.runs === 6) st.sixes += 1;
+    bMap.set(ev.batter, st);
+
+    const ns = bMap.get(ev.nonStriker);
+    if (ns) ns.appeared = true;
+
+    if (ev.isWicket && ev.playerOut) {
+      runningWkts += 1;
+      const outPlayer = bMap.get(ev.playerOut);
+      if (outPlayer) {
+        outPlayer.out = true;
+        outPlayer.dismissalText = ev.dismissal || `b ${ev.bowler}`;
+      }
+      fallOfWickets.push({
+        score: `${runningRuns}-${runningWkts}`,
+        player: ev.playerOut,
+        over: ev.overLabel,
+      });
+    }
+  });
+
+  const batters: BatterScorecardRow[] = squad.map((name) => {
+    const st = bMap.get(name)!;
+    const isCurrentlyAtCrease =
+      events.length > 0 && !st.out && (name === activeStriker || name === activeNonStriker || st.appeared);
+    return {
+      name,
+      runs: st.runs,
+      balls: st.balls,
+      fours: st.fours,
+      sixes: st.sixes,
+      sr: st.balls > 0 ? ((st.runs / st.balls) * 100).toFixed(1) : "0.0",
+      status: st.out ? "out" : isCurrentlyAtCrease ? "batting" : "dnb",
+      isStriker: isCurrentlyAtCrease && name === activeStriker,
+      dismissalText: st.out ? st.dismissalText : isCurrentlyAtCrease ? "not out" : "yet to bat",
+    };
+  });
+
+  const bowlMap = new Map<string, { balls: number; runs: number; wickets: number; dots: number }>();
+  events.forEach((ev) => {
+    const cur = bowlMap.get(ev.bowler) || { balls: 0, runs: 0, wickets: 0, dots: 0 };
+    cur.balls += 1;
+    cur.runs += ev.runs;
+    if (ev.isWicket) cur.wickets += 1;
+    if (ev.runs === 0 && !ev.isWicket) cur.dots += 1;
+    bowlMap.set(ev.bowler, cur);
+  });
+
+  const bowlers: BowlerScorecardRow[] = [];
+  bowlMap.forEach((st, name) => {
+    bowlers.push({
+      name,
+      overs: `${Math.floor(st.balls / 6)}.${st.balls % 6}`,
+      balls: st.balls,
+      runs: st.runs,
+      wickets: st.wickets,
+      dots: st.dots,
+      econ: st.balls > 0 ? ((st.runs / st.balls) * 6).toFixed(2) : "0.00",
+    });
+  });
+
+  return {
+    innings: inningsNum,
+    teamName: inningsNum === 1 ? "INDIA" : "AUSTRALIA",
+    teamShort: inningsNum === 1 ? "IND" : "AUS",
+    totalRuns,
+    totalWickets,
+    oversDisplay,
+    crr,
+    batters,
+    bowlers,
+    fallOfWickets,
+  };
+}
+
 const ALLOWED_KEYWORDS = [
   "india", "australia", "ind", "aus", "match", "score", "over", "wicket", "run",
   "boundary", "four", "six", "ball", "pitch", "chase", "target", "innings", "crr",
@@ -330,7 +546,8 @@ const ALLOWED_KEYWORDS = [
   "axar", "patel", "kuldeep", "bumrah", "jasprit", "arshdeep", "singh", "career",
   "stats", "average", "strike rate", "century", "fifty", "world cup", "t20", "t20i",
   "record", "history", "win", "lose", "player", "team", "who", "why", "how", "fantasy",
-  "points", "captain", "मैच", "रन", "विकेट", "ओवर", "भारत", "ऑस्ट्रेलिया", "रोहित", "कोहली", "बुमराह", "हेड"
+  "points", "captain", "bowling", "batting", "strength", "scored", "ipl",
+  "मैच", "रन", "विकेट", "ओवर", "भारत", "ऑस्ट्रेलिया", "रोहित", "कोहली", "बुमराह", "हेड"
 ];
 
 export default function D11Application() {
@@ -340,7 +557,8 @@ export default function D11Application() {
   const [selectedStartOver, setSelectedStartOver] = useState<number>(10);
 
   const [currentBallIdx, setCurrentBallIdx] = useState<number>(61);
-  const [activeTab, setActiveTab] = useState<"live" | "matchmemo" | "momentum" | "timeline">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "fullcard" | "matchmemo" | "momentum" | "timeline">("live");
+  const [scorecardInningsTab, setScorecardInningsTab] = useState<1 | 2>(1);
   const [commFilter, setCommFilter] = useState<"all" | "wickets" | "boundaries">("all");
 
   const [userOnline, setUserOnline] = useState<boolean>(true);
@@ -349,12 +567,12 @@ export default function D11Application() {
   const [memoLang, setMemoLang] = useState<"en" | "hi">("en");
   const [memoDepth, setMemoDepth] = useState<"quick" | "detailed">("quick");
 
-  // NEW FEATURE 1: FANTASY MODE STATE
+  // FANTASY MODE STATE
   const [fantasyMode, setFantasyMode] = useState<boolean>(true);
   const [fantasyBooster, setFantasyBooster] = useState<"1x" | "1.5x" | "2x">("1x");
   const [fantasyAnimKey, setFantasyAnimKey] = useState<number>(0);
 
-  // NEW FEATURE 2: FDE TELEMETRY / DEVELOPER MODE STATE
+  // FDE TELEMETRY STATE
   const [fdeMode, setFdeMode] = useState<boolean>(false);
   const [simulateOutage, setSimulateOutage] = useState<boolean>(false);
   const [telemetryLog, setTelemetryLog] = useState<{
@@ -380,7 +598,7 @@ export default function D11Application() {
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [lastStepPulse, setLastStepPulse] = useState<number>(0);
 
-  const [backendOnline, setBackendOnline] = useState<boolean>(false);
+  const [backendOnline, setBackendOnline] = useState<boolean>(true);
   const autoRunTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -399,20 +617,6 @@ export default function D11Application() {
     document.documentElement.classList.toggle("dark", next === "dark");
     window.localStorage.setItem("d11-theme", next);
   };
-
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/health`);
-        setBackendOnline(res.ok);
-      } catch {
-        setBackendOnline(false);
-      }
-    };
-    checkHealth();
-    const id = setInterval(checkHealth, 12000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (!userOnline && screen === "live") {
@@ -474,6 +678,14 @@ export default function D11Application() {
     });
     return summaries;
   }, []);
+
+  // Compute Full Scorecards from Ball 1 to Current Ball for BOTH Innings
+  const fullScorecards = useMemo(() => {
+    const activeInnings = ALL_MATCH_EVENTS[currentBallIdx - 1]?.innings || 1;
+    const inn1Card = computeInningsFullCard(1, activeInnings === 1 ? currentBallIdx : 120);
+    const inn2Card = computeInningsFullCard(2, activeInnings === 2 ? currentBallIdx : 0);
+    return { 1: inn1Card, 2: inn2Card };
+  }, [currentBallIdx]);
 
   const matchState = useMemo(() => {
     const currentEvent = ALL_MATCH_EVENTS[currentBallIdx - 1] || ALL_MATCH_EVENTS[0];
@@ -591,7 +803,11 @@ export default function D11Application() {
     };
   }, [currentBallIdx]);
 
-  // Compute MatchMemo Catch-Up Data + DREAM11 FANTASY POINTS ENGINE
+  // Keep scorecardInningsTab synced when innings changes
+  useEffect(() => {
+    setScorecardInningsTab(matchState.innings);
+  }, [matchState.innings]);
+
   const matchMemoData = useMemo(() => {
     const endBall = ALL_MATCH_EVENTS[Math.max(0, currentBallIdx - 1)];
     const minInningsIdx = endBall.innings === 1 ? 1 : 121;
@@ -602,7 +818,6 @@ export default function D11Application() {
       (e) => e.innings === endBall.innings && e.index > fromIdx && e.index <= currentBallIdx
     );
 
-    // If missedEvents is 0 (user hasn't stepped away yet), evaluate the last 12 balls for Fantasy preview
     const fantasySlice =
       missedEvents.length > 0
         ? missedEvents
@@ -613,8 +828,6 @@ export default function D11Application() {
               e.index <= currentBallIdx
           );
 
-    // Official Dream11 T20 Fantasy Scoring Calculation per Player in Window
-    // +1/run, +1 boundary bonus (4s), +2 six bonus (6s), +25/wicket, +8/bowled bonus, +1/dot ball bowled
     const fMap = new Map<
       string,
       {
@@ -654,7 +867,7 @@ export default function D11Application() {
       if (ev.isWicket) {
         bowl.wickets += 1;
         if (ev.dismissal && ev.dismissal.startsWith("b ")) {
-          bowl.bowledBonus += 1; // +8 pts Dream11 LBW/Bowled bonus
+          bowl.bowledBonus += 1;
         }
       } else if (ev.runs === 0) {
         bowl.dotsBowled += 1;
@@ -818,7 +1031,45 @@ export default function D11Application() {
     setShowMatchMemoModal(true);
   };
 
-  // Ask MatchMemo Handler with FDE Telemetry Instrumentation & Chaos Outage Toggle
+  // Helper to get a player's exact match performance up to currentBallIdx
+  const getPlayerMatchSummaryText = (shortName: string, lang: "en" | "hi"): string => {
+    const allBatters = [...fullScorecards[1].batters, ...fullScorecards[2].batters];
+    const allBowlers = [...fullScorecards[1].bowlers, ...fullScorecards[2].bowlers];
+
+    const batRow = allBatters.find((b) => b.name === shortName);
+    const bowlRow = allBowlers.find((b) => b.name === shortName);
+
+    const parts: string[] = [];
+    if (batRow && batRow.status !== "dnb") {
+      if (lang === "en") {
+        parts.push(
+          `In this match (${batRow.status === "out" ? `OUT: ${batRow.dismissalText}` : "NOT OUT*"}): **${batRow.runs}${
+            batRow.status === "batting" ? "*" : ""
+          } runs off ${batRow.balls} balls** (${batRow.fours}x4, ${batRow.sixes}x6, SR ${batRow.sr}).`
+        );
+      } else {
+        parts.push(
+          `इस मैच में प्रदर्शन (${batRow.status === "out" ? `आउट: ${batRow.dismissalText}` : "नाबाद*"}): **${batRow.balls} गेंदों में ${
+            batRow.runs
+          }${batRow.status === "batting" ? "*" : ""} रन** (${batRow.fours} चौके, ${batRow.sixes} छक्के, SR ${batRow.sr})।`
+        );
+      }
+    }
+    if (bowlRow && bowlRow.balls > 0) {
+      if (lang === "en") {
+        parts.push(
+          `Bowling in this match: **${bowlRow.overs} overs, ${bowlRow.runs} runs, ${bowlRow.wickets} wicket(s)** (Econ ${bowlRow.econ}, ${bowlRow.dots} dots).`
+        );
+      } else {
+        parts.push(
+          `इस मैच में गेंदबाजी: **${bowlRow.overs} ओवर में ${bowlRow.runs} रन देकर ${bowlRow.wickets} विकेट** (इकॉनमी ${bowlRow.econ})।`
+        );
+      }
+    }
+    return parts.join(" ");
+  };
+
+  // Ask MatchMemo Handler: Calls Same-Origin /api/ask-ai FIRST (Zero CORS on Vercel!)
   const handleAskMatchMemo = async (questionText: string) => {
     const q = questionText.trim();
     if (!q) return;
@@ -826,10 +1077,64 @@ export default function D11Application() {
     setAiLoading(true);
     const startTime = performance.now();
 
-    const contextSummary = `${matchState.teamBatting} ${matchState.totalRuns}/${matchState.totalWickets} in ${matchState.oversDisplay} overs (Innings ${matchState.innings}). Striker: ${matchState.striker.name} ${matchState.striker.runs}*(${matchState.striker.balls}), Non-Striker: ${matchState.nonStriker.name} ${matchState.nonStriker.runs}*(${matchState.nonStriker.balls}), Bowler: ${matchState.bowler.name} (${matchState.bowler.overs}-${matchState.bowler.runs}-${matchState.bowler.wickets}). Missed window: ${matchMemoData.missedCount} balls (+${matchMemoData.runsAdded}R, ${matchMemoData.wicketsFallen.length}W).`;
+    // Build rich Full-Scorecard Context for both innings so Groq knows every batter & bowler's exact match score!
+    const inn1BatSummary = fullScorecards[1].batters
+      .filter((b) => b.status !== "dnb")
+      .map((b) => `${b.name}: ${b.runs}${b.status === "batting" ? "*" : ""}(${b.balls}b, ${b.fours}x4, ${b.sixes}x6, ${b.dismissalText})`)
+      .join(", ");
+    const inn1BowlSummary = fullScorecards[1].bowlers
+      .map((bw) => `${bw.name}: ${bw.overs}-${bw.runs}-${bw.wickets} (Econ ${bw.econ})`)
+      .join(", ");
 
-    // If FDE Chaos Outage simulation is NOT enabled, try calling the FastAPI / Groq backend
+    const inn2BatSummary =
+      matchState.innings === 2
+        ? fullScorecards[2].batters
+            .filter((b) => b.status !== "dnb")
+            .map((b) => `${b.name}: ${b.runs}${b.status === "batting" ? "*" : ""}(${b.balls}b, ${b.fours}x4, ${b.sixes}x6, ${b.dismissalText})`)
+            .join(", ")
+        : "Yet to bat";
+
+    const contextSummary = `CURRENT LIVE SCORE: ${matchState.teamBatting} ${matchState.totalRuns}/${matchState.totalWickets} in ${matchState.oversDisplay} overs (Innings ${matchState.innings}).
+1ST INNINGS (INDIA ${fullScorecards[1].totalRuns}/${fullScorecards[1].totalWickets} in ${fullScorecards[1].oversDisplay} ov) BATTING: ${inn1BatSummary}. AUS BOWLING: ${inn1BowlSummary}.
+2ND INNINGS (AUSTRALIA ${fullScorecards[2].totalRuns}/${fullScorecards[2].totalWickets} in ${fullScorecards[2].oversDisplay} ov) BATTING: ${inn2BatSummary}.
+MISSED WINDOW: ${matchMemoData.missedCount} balls (+${matchMemoData.runsAdded}R, ${matchMemoData.wicketsFallen.length}W).`;
+
     if (!simulateOutage) {
+      // 1. Try Same-Origin Next.js API Route (/api/ask-ai) -> Works on Vercel & Localhost with ZERO CORS!
+      try {
+        const sameOriginRes = await fetch("/api/ask-ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: q,
+            language: memoLang,
+            match_context: contextSummary,
+          }),
+        });
+        if (sameOriginRes.ok) {
+          const data = await sameOriginRes.json();
+          const elapsed = Math.round(performance.now() - startTime);
+          if (data.answer) {
+            setAiResponse(data.answer);
+            setAiSource(data.source || "groq-llm");
+            setBackendOnline(true);
+            setTelemetryLog({
+              latencyMs: elapsed,
+              provider: data.source || "groq-llm",
+              guardrailStatus: data.allowed === false ? "BLOCKED" : "PASS",
+              fallbackTriggered: false,
+              timestamp: new Date().toISOString(),
+              lastQuestion: q,
+            });
+            setAiLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Proceed to direct backend check if needed
+      }
+
+      // 2. Secondary Check: Direct FastAPI URL (for local development if needed)
       try {
         const res = await fetch(`${API_BASE}/matches/ind-aus-thriller/ask-ai`, {
           method: "POST",
@@ -846,6 +1151,7 @@ export default function D11Application() {
           if (data.answer) {
             setAiResponse(data.answer);
             setAiSource(data.source || "groq-llm");
+            setBackendOnline(true);
             setTelemetryLog({
               latencyMs: elapsed,
               provider: data.source || "groq-llm",
@@ -859,7 +1165,7 @@ export default function D11Application() {
           }
         }
       } catch {
-        // Gracefully degrade to deterministic engine below
+        // Gracefully degrade to deterministic match + career engine below
       }
     }
 
@@ -879,25 +1185,28 @@ export default function D11Application() {
       });
       setAiResponse(
         memoLang === "en"
-          ? "🚫 MatchMemo Guardrail: I can only answer questions related to Cricket, the India vs Australia teams, or the career stats and match events of the participating players!"
-          : "🚫 MatchMemo Guardrail: मैं केवल भारत बनाम ऑस्ट्रेलिया (IND vs AUS) मैच और इसमें खेल रहे खिलाड़ियों के करियर आँकड़ों से जुड़े सवालों के जवाब दे सकता हूँ!"
+          ? "🚫 MatchMemo Guardrail: I can only answer questions related to Cricket, the India vs Australia teams, or the match and career stats of the participating players!"
+          : "🚫 MatchMemo Guardrail: मैं केवल भारत बनाम ऑस्ट्रेलिया (IND vs AUS) मैच और इसमें खेल रहे खिलाड़ियों के स्कोर व करियर आँकड़ों से जुड़े सवालों के जवाब दे सकता हूँ!"
       );
       setAiLoading(false);
       return;
     }
 
+    // Match + Career Hybrid Player Lookup (Answers BOTH current match score AND career stats!)
     for (const [key, profile] of Object.entries(PLAYER_CAREER_PROFILES)) {
       if (qLower.includes(key)) {
-        setAiSource(simulateOutage ? "fde-failover-cache" : "d11-player-archive");
+        const matchPerf = getPlayerMatchSummaryText(profile.shortName, memoLang);
+        setAiSource(simulateOutage ? "fde-failover-cache" : "d11-player-match-intel");
         setTelemetryLog({
           latencyMs: elapsed,
-          provider: simulateOutage ? "fde-failover-engine (0ms SLA)" : "d11-player-archive",
+          provider: simulateOutage ? "fde-failover-engine (0ms SLA)" : "d11-player-match-intel",
           guardrailStatus: "PASS",
           fallbackTriggered: simulateOutage,
           timestamp: new Date().toISOString(),
           lastQuestion: q,
         });
-        setAiResponse(memoLang === "en" ? profile.statsEn : profile.statsHi);
+        const baseBio = memoLang === "en" ? profile.statsEn : profile.statsHi;
+        setAiResponse(matchPerf ? `📊 **Match Scorecard:** ${matchPerf}\n\n${baseBio}` : baseBio);
         setAiLoading(false);
         return;
       }
@@ -906,7 +1215,7 @@ export default function D11Application() {
     setAiSource(simulateOutage ? "fde-deterministic-failover" : "d11-match-intelligence");
     setTelemetryLog({
       latencyMs: elapsed,
-      provider: simulateOutage ? "fde-deterministic-failover (LLM Outage Sim)" : "d11-match-intelligence",
+      provider: simulateOutage ? "fde-deterministic-failover" : "d11-match-intelligence",
       guardrailStatus: "PASS",
       fallbackTriggered: true,
       timestamp: new Date().toISOString(),
@@ -920,14 +1229,199 @@ export default function D11Application() {
     setAiLoading(false);
   };
 
-  // Multiplier helper for Fantasy Mode (1x, 1.5x VC, 2x Captain)
   const applyMultiplier = (pts: number) => {
     if (fantasyBooster === "2x") return pts * 2;
     if (fantasyBooster === "1.5x") return Math.round(pts * 1.5);
     return pts;
   };
 
-  // Reusable Animated Fantasy Mode Impact Strip
+  // COMPLETE BALL-1-TO-CURRENT-BALL SCORECARD COMPONENT (INNINGS 1 & INNINGS 2)
+  const renderFullMatchScorecard = () => {
+    const activeCard = fullScorecards[scorecardInningsTab];
+
+    return (
+      <section className="rounded-[4px] border border-[var(--border-strong)] bg-[var(--surface-primary)] overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-3.5 py-2.5">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-[#E53945]">
+              📋 COMPLETE MATCH SCORECARD (BALL 1 → CURRENT BALL)
+            </div>
+            <h3 className="text-xs sm:text-sm font-bold uppercase">
+              ALL BATTERS, DISMISSALS, FALL OF WICKETS &amp; BOWLING SPELLS
+            </h3>
+          </div>
+
+          {/* Switch between Innings 1 (IND) and Innings 2 (AUS) anytime! */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setScorecardInningsTab(1)}
+              className={`inline-flex items-center gap-1.5 rounded-[3px] px-2.5 py-1 text-[11px] font-bold uppercase border transition ${
+                scorecardInningsTab === 1
+                  ? "border-[#E53945] bg-[#E53945] text-white"
+                  : "border-[var(--border-subtle)] bg-[var(--surface-primary)] text-[var(--text-secondary)]"
+              }`}
+            >
+              <FlagIND className="h-3 w-4" />
+              <span>
+                1ST INN: IND ({fullScorecards[1].totalRuns}/{fullScorecards[1].totalWickets})
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setScorecardInningsTab(2)}
+              className={`inline-flex items-center gap-1.5 rounded-[3px] px-2.5 py-1 text-[11px] font-bold uppercase border transition ${
+                scorecardInningsTab === 2
+                  ? "border-[#E53945] bg-[#E53945] text-white"
+                  : "border-[var(--border-subtle)] bg-[var(--surface-primary)] text-[var(--text-secondary)]"
+              }`}
+            >
+              <FlagAUS className="h-3 w-4" />
+              <span>
+                2ND INN: AUS (
+                {matchState.innings === 2
+                  ? `${fullScorecards[2].totalRuns}/${fullScorecards[2].totalWickets}`
+                  : "YET TO BAT"}
+                )
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {scorecardInningsTab === 2 && matchState.innings === 1 ? (
+          <div className="p-5 text-center text-xs text-[var(--text-secondary)]">
+            🇦🇺 Australia&apos;s 2nd Innings chase begins after India completes 20 overs (205/5). Click{" "}
+            <button
+              type="button"
+              onClick={() => handleSwitchInningsLive(2)}
+              className="font-bold text-[#E53945] underline"
+            >
+              Jump to 2nd Innings
+            </button>{" "}
+            to simulate Australia&apos;s chase now!
+          </div>
+        ) : (
+          <div>
+            {/* Innings Summary Header */}
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-3.5 py-2 text-xs font-bold uppercase bg-[var(--surface-primary)]">
+              <span>
+                {activeCard.teamName} INNINGS ({activeCard.oversDisplay} OVERS)
+              </span>
+              <span className="tabular-nums text-sm text-[#E53945]">
+                {activeCard.totalRuns}/{activeCard.totalWickets} (CRR: {activeCard.crr})
+              </span>
+            </div>
+
+            {/* Full Batting Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs tabular-nums">
+                <thead>
+                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[10px] font-bold uppercase text-[var(--text-muted)]">
+                    <th className="py-2 pl-3 pr-2">BATTER</th>
+                    <th className="py-2 px-2">STATUS / DISMISSAL</th>
+                    <th className="py-2 px-1.5 text-right">R</th>
+                    <th className="py-2 px-1.5 text-right">B</th>
+                    <th className="py-2 px-1.5 text-right">4s</th>
+                    <th className="py-2 px-1.5 text-right">6s</th>
+                    <th className="py-2 pl-1.5 pr-3 text-right">SR</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-subtle)]">
+                  {activeCard.batters.map((b) => (
+                    <tr
+                      key={b.name}
+                      className={
+                        b.status === "batting"
+                          ? "bg-[#E53945]/8"
+                          : b.status === "dnb"
+                          ? "opacity-55"
+                          : ""
+                      }
+                    >
+                      <td className="py-2 pl-3 pr-2 font-bold whitespace-nowrap">
+                        {b.name}{" "}
+                        {b.status === "batting" && (
+                          <span className="text-[#E53945]">{b.isStriker ? "*" : ""}</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-2 text-[11px] text-[var(--text-secondary)]">
+                        {b.status === "out" ? (
+                          <span className="text-[#E53945] font-medium">{b.dismissalText}</span>
+                        ) : b.status === "batting" ? (
+                          <span className="text-[#3B82F6] font-bold uppercase">batting</span>
+                        ) : (
+                          <span>yet to bat</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-1.5 text-right font-bold">
+                        {b.status === "dnb" ? "-" : b.runs}
+                      </td>
+                      <td className="py-2 px-1.5 text-right text-[var(--text-secondary)]">
+                        {b.status === "dnb" ? "-" : b.balls}
+                      </td>
+                      <td className="py-2 px-1.5 text-right text-[var(--text-secondary)]">
+                        {b.status === "dnb" ? "-" : b.fours}
+                      </td>
+                      <td className="py-2 px-1.5 text-right text-[var(--text-secondary)]">
+                        {b.status === "dnb" ? "-" : b.sixes}
+                      </td>
+                      <td className="py-2 pl-1.5 pr-3 text-right font-semibold">
+                        {b.status === "dnb" ? "-" : b.sr}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Fall of Wickets Strip */}
+            {activeCard.fallOfWickets.length > 0 && (
+              <div className="border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-3.5 py-2 text-[11px]">
+                <span className="font-bold uppercase text-[#E53945] mr-1.5">
+                  🚨 FALL OF WICKETS:
+                </span>
+                <span className="text-[var(--text-secondary)]">
+                  {activeCard.fallOfWickets
+                    .map((f) => `${f.score} (${f.player}, ${f.over} ov)`)
+                    .join(" • ")}
+                </span>
+              </div>
+            )}
+
+            {/* Full Bowling Table */}
+            <div className="border-t border-[var(--border-subtle)] overflow-x-auto">
+              <table className="w-full text-left text-xs tabular-nums">
+                <thead>
+                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[10px] font-bold uppercase text-[var(--text-muted)]">
+                    <th className="py-2 pl-3 pr-2">BOWLER</th>
+                    <th className="py-2 px-1.5 text-right">O</th>
+                    <th className="py-2 px-1.5 text-right">DOTS</th>
+                    <th className="py-2 px-1.5 text-right">R</th>
+                    <th className="py-2 px-1.5 text-right">W</th>
+                    <th className="py-2 pl-1.5 pr-3 text-right">ECON</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-subtle)]">
+                  {activeCard.bowlers.map((bw) => (
+                    <tr key={bw.name}>
+                      <td className="py-2 pl-3 pr-2 font-bold">{bw.name}</td>
+                      <td className="py-2 px-1.5 text-right">{bw.overs}</td>
+                      <td className="py-2 px-1.5 text-right text-[var(--text-secondary)]">{bw.dots}</td>
+                      <td className="py-2 px-1.5 text-right">{bw.runs}</td>
+                      <td className="py-2 px-1.5 text-right font-bold text-[#E53945]">{bw.wickets}</td>
+                      <td className="py-2 pl-1.5 pr-3 text-right font-semibold">{bw.econ}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  };
+
   const renderFantasyImpactSection = () => {
     if (!fantasyMode) return null;
     const maxPts = Math.max(1, ...(matchMemoData.fantasyLeaderboard.map((p) => p.points) || [40]));
@@ -952,7 +1446,6 @@ export default function D11Application() {
             </div>
           </div>
 
-          {/* 1x / 1.5x VC / 2x Captain Multiplier Toggle */}
           <div className="flex items-center gap-1 rounded-[3px] border border-[var(--border-strong)] bg-[var(--surface-primary)] p-0.5">
             {(
               [
@@ -1005,7 +1498,6 @@ export default function D11Application() {
                     </div>
                   </div>
 
-                  {/* Animated +PTS Callout Badge */}
                   <div className="animate-pts-glow shrink-0 rounded-[3px] bg-[#E53945] px-2.5 py-1 text-right tabular-nums text-white">
                     <div className="text-xs sm:text-sm font-bold leading-none">
                       +{boostedPts} PTS
@@ -1018,7 +1510,6 @@ export default function D11Application() {
                   </div>
                 </div>
 
-                {/* Fantasy Impact Bar */}
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-[2px] bg-[var(--bg-secondary)]">
                   <div
                     style={{ width: `${widthPct}%` }}
@@ -1033,7 +1524,6 @@ export default function D11Application() {
     );
   };
 
-  // NEW FEATURE 2: FDE TELEMETRY & CHAOS ENGINEERING DRAWER
   const renderFdeTelemetryPanel = () => {
     if (!fdeMode) return null;
 
@@ -1335,7 +1825,6 @@ export default function D11Application() {
     );
   };
 
-  // MatchMemo Panel with FANTASY MODE Toggle
   const renderMatchMemoPanel = () => (
     <section className="rounded-[4px] border-2 border-[#E53945] bg-[var(--surface-primary)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[#E53945]/12 px-3.5 py-3">
@@ -1349,7 +1838,6 @@ export default function D11Application() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* FANTASY MODE TOGGLE BUTTON */}
           <button
             type="button"
             onClick={() => {
@@ -1365,7 +1853,6 @@ export default function D11Application() {
             🏆 FANTASY MODE {fantasyMode ? "ON" : "OFF"}
           </button>
 
-          {/* Language Switcher */}
           <div className="flex rounded-[4px] border border-[var(--border-strong)] bg-[var(--bg-secondary)] p-0.5">
             <button
               type="button"
@@ -1390,7 +1877,6 @@ export default function D11Application() {
       </div>
 
       <div className="p-3.5 sm:p-4 space-y-3.5">
-        {/* Score Delta Strip */}
         <div className="grid grid-cols-2 gap-2 tabular-nums">
           <div className="rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-2.5">
             <div className="text-[10px] font-bold uppercase text-[var(--text-muted)]">
@@ -1411,10 +1897,8 @@ export default function D11Application() {
           </div>
         </div>
 
-        {/* FANTASY MODE LEADERBOARD INJECTION */}
         {renderFantasyImpactSection()}
 
-        {/* 15s vs 30s Switcher */}
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -1440,7 +1924,6 @@ export default function D11Application() {
           </button>
         </div>
 
-        {/* Summary Text */}
         <div className="rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-3 text-xs sm:text-sm leading-relaxed">
           {memoLang === "en"
             ? memoDepth === "quick"
@@ -1451,7 +1934,6 @@ export default function D11Application() {
             : matchMemoData.detailedRecapHi}
         </div>
 
-        {/* Turning Point */}
         <div className="rounded-[4px] border-l-4 border-l-[#E53945] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-3">
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#E53945]">
             {memoLang === "en" ? "🔥 BIGGEST TURNING POINT" : "🔥 मैच का सबसे बड़ा टर्निंग पॉइंट"}
@@ -1461,11 +1943,11 @@ export default function D11Application() {
           </p>
         </div>
 
-        {/* ASK MATCHMEMO WITH CAREER STATS + GROQ + GUARDRAIL */}
+        {/* ASK MATCHMEMO WITH FULL SCORECARD CONTEXT + GROQ + GUARDRAIL */}
         <div className="border-t border-[var(--border-subtle)] pt-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#E53945]">
-              🤖 ASK MATCHMEMO AI (MATCH &amp; PLAYER CAREER INTEL)
+              🤖 ASK MATCHMEMO AI (MATCH SCORE &amp; CAREER INTEL)
             </span>
             <span className="text-[9px] uppercase font-bold text-[var(--text-muted)]">
               GUARDRAIL: IND/AUS ONLY
@@ -1474,9 +1956,9 @@ export default function D11Application() {
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[
-              { labelEn: "🏏 Rohit career stats", labelHi: "🏏 रोहित के करियर आँकड़े", q: "Tell me Rohit Sharma's T20I career stats and impact in this match" },
-              { labelEn: "🎯 Bumrah career stats", labelHi: "🎯 बुमराह के करियर आँकड़े", q: "What are Jasprit Bumrah's T20I career stats and economy?" },
-              { labelEn: "🚨 Travis Head record", labelHi: "🚨 ट्रेविस हेड का रिकॉर्ड", q: "Tell me about Travis Head's T20I strike rate and record vs India" },
+              { labelEn: "🏏 Rohit score in this match?", labelHi: "🏏 इस मैच में रोहित का स्कोर?", q: "What is Rohit Sharma's score in this match and his T20I career record?" },
+              { labelEn: "🎯 Bumrah bowling figures", labelHi: "🎯 बुमराह की गेंदबाजी", q: "What are Jasprit Bumrah's bowling figures in this match and career economy?" },
+              { labelEn: "🚨 Travis Head record", labelHi: "🚨 ट्रेविस हेड का रिकॉर्ड", q: "Tell me about Travis Head's score in this match and T20I strike rate" },
               { labelEn: "📉 Why did momentum shift?", labelHi: "📉 मोमेंटम क्यों बदला?", q: "Why did the match momentum shift in the recent overs?" },
             ].map((chip, idx) => (
               <button
@@ -1503,8 +1985,8 @@ export default function D11Application() {
               onChange={(e) => setCustomQuestion(e.target.value)}
               placeholder={
                 memoLang === "en"
-                  ? "Ask about match, Rohit, Bumrah, Head, Starc..."
-                  : "मैच या खिलाड़ियों (रोहित, बुमराह, हेड) के बारे में पूछें..."
+                  ? "Ask Rohit score in this match, Bumrah, Head, Stoinis..."
+                  : "इस मैच में रोहित का स्कोर, बुमराह, हेड के बारे में पूछें..."
               }
               className="flex-1 min-w-0 rounded-[4px] border border-[var(--border-strong)] bg-[var(--bg-secondary)] px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[#E53945] focus:outline-none"
             />
@@ -1518,7 +2000,7 @@ export default function D11Application() {
           </form>
 
           {aiResponse && (
-            <div className="mt-2.5 rounded-[4px] border border-[var(--border-strong)] bg-[var(--bg-secondary)] p-3 text-xs leading-relaxed text-[var(--text-primary)]">
+            <div className="mt-2.5 rounded-[4px] border border-[var(--border-strong)] bg-[var(--bg-secondary)] p-3 text-xs leading-relaxed text-[var(--text-primary)] whitespace-pre-line">
               <div className="mb-1 flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-[#E53945]">
                 <span>
                   SOURCE: {aiSource.toUpperCase()} ({telemetryLog.latencyMs}ms)
@@ -1570,7 +2052,7 @@ export default function D11Application() {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-2.5 py-1 text-[10px] font-semibold uppercase">
                 <span className={`h-2 w-2 rounded-[2px] ${backendOnline ? "bg-[#E53945]" : "bg-[#C6CBD2]"}`} />
-                {backendOnline ? "AI BACKEND ONLINE" : "LOCAL ENGINE"}
+                {backendOnline ? "AI ENGINE READY" : "LOCAL ENGINE"}
               </div>
               <button
                 onClick={toggleTheme}
@@ -1626,7 +2108,7 @@ export default function D11Application() {
                   </div>
                   <p className="mt-1.5 text-base sm:text-lg font-bold uppercase">🇮🇳 INDIA BATTING (20 OVERS)</p>
                   <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                    🔥 Rohit Sharma&apos;s explosive 92 (41), SKY &amp; Dube six-hitting, and Hardik Pandya&apos;s death-overs blitz.
+                    🔥 Rohit Sharma&apos;s explosive knock, SKY &amp; Dube six-hitting, and Hardik Pandya&apos;s death-overs blitz.
                   </p>
                 </button>
 
@@ -1649,7 +2131,7 @@ export default function D11Application() {
                   </div>
                   <p className="mt-1.5 text-base sm:text-lg font-bold uppercase">🇦🇺 AUSTRALIA CHASE (20 OVERS)</p>
                   <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                    ⚡ Travis Head&apos;s 76 (43) vs Kuldeep, Axar &amp; Bumrah&apos;s match-turning death spell (Worm Graph Overlaps India!).
+                    ⚡ Travis Head&apos;s counter-attack vs Kuldeep, Axar &amp; Bumrah&apos;s match-turning death spell (Worm Graph Overlaps India!).
                   </p>
                 </button>
               </div>
@@ -1737,7 +2219,7 @@ export default function D11Application() {
   return (
     <main className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] pb-12 overflow-x-hidden">
       <div className="mx-auto max-w-7xl px-2.5 py-3 sm:px-6">
-        {/* TOP HEADER WITH FDE TELEMETRY & FANTASY TOGGLES */}
+        {/* TOP HEADER */}
         <header className="flex flex-wrap items-center justify-between gap-2 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-3 py-2.5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-[4px] bg-[#E53945] text-xs font-bold text-white">
@@ -1765,7 +2247,6 @@ export default function D11Application() {
               </div>
             )}
 
-            {/* FDE TELEMETRY / DEV MODE BUTTON */}
             <button
               type="button"
               onClick={() => setFdeMode(!fdeMode)}
@@ -1796,7 +2277,6 @@ export default function D11Application() {
           </div>
         </header>
 
-        {/* FDE TELEMETRY INSPECTOR DRAWER */}
         {renderFdeTelemetryPanel()}
 
         {/* SIMULATION CONTROLS DECK */}
@@ -1808,12 +2288,33 @@ export default function D11Application() {
                   🎮 START SIMULATING THE MATCH FROM HERE
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] hidden sm:block">
-                  Step ball-by-ball, or press <strong>GO OFFLINE</strong> to auto-run and <strong>BACK ONLINE</strong> for MatchMemo + Fantasy Pts Recap.
+                  Step ball-by-ball, switch between Innings 1 &amp; 2 anytime, or press <strong>GO OFFLINE</strong> to test MatchMemo.
                 </p>
               </div>
-              <span className="text-[10px] font-bold uppercase text-[var(--text-muted)] lg:hidden tabular-nums">
-                OV {matchState.oversDisplay}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchInningsLive(1)}
+                  className={`rounded-[3px] px-2 py-1 text-[10px] font-bold uppercase border ${
+                    matchState.innings === 1
+                      ? "border-[#E53945] bg-[#E53945] text-white"
+                      : "border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  🇮🇳 1ST INN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchInningsLive(2)}
+                  className={`rounded-[3px] px-2 py-1 text-[10px] font-bold uppercase border ${
+                    matchState.innings === 2
+                      ? "border-[#E53945] bg-[#E53945] text-white"
+                      : "border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  🇦🇺 2ND INN
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
@@ -1863,11 +2364,12 @@ export default function D11Application() {
           </div>
         </section>
 
-        {/* NAVIGATION TABS */}
+        {/* NAVIGATION TABS (INCLUDES FULL SCORECARD TAB FOR INNINGS 1 & 2) */}
         <nav className="mt-2.5 flex items-center overflow-x-auto whitespace-nowrap border-b border-[var(--border-subtle)] bg-[var(--surface-primary)] px-2">
           {(
             [
-              { id: "live", label: "🏏 SCORECARD" },
+              { id: "live", label: "🏏 LIVE CREASE" },
+              { id: "fullcard", label: "📋 FULL SCORECARD (INN 1 & 2)" },
               { id: "matchmemo", label: `⚡ MATCHMEMO + 🏆 FANTASY (${matchMemoData.missedCount})` },
               { id: "momentum", label: "📈 WORM GRAPH" },
               { id: "timeline", label: "⏱️ 40-OVER JUMP" },
@@ -1891,6 +2393,7 @@ export default function D11Application() {
         {/* MAIN WORKSPACE */}
         <div className="mt-3 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-3.5 min-w-0">
+            {activeTab === "fullcard" && renderFullMatchScorecard()}
             {activeTab === "momentum" && renderWormGraph()}
 
             {activeTab === "timeline" && (
@@ -1945,16 +2448,25 @@ export default function D11Application() {
 
             {activeTab === "matchmemo" && <div className="lg:hidden">{renderMatchMemoPanel()}</div>}
 
-            {/* MAIN BOXY SCORECARD */}
+            {/* MAIN LIVE CREASE SCORECARD */}
             <section
               key={lastStepPulse}
               className="rounded-[4px] border border-[var(--border-subtle)] bg-[var(--surface-primary)] overflow-hidden"
             >
               <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-3 py-2 text-[10px] sm:text-xs font-bold uppercase text-[var(--text-secondary)]">
                 <span>ICC MEN&apos;S T20 • INNINGS {matchState.innings}/2</span>
-                <span className="text-[#E53945]">
-                  {matchState.innings === 2 ? "🇮🇳 IND: 205/5 (20.0)" : "TARGET PROJECTION: 205"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#E53945]">
+                    {matchState.innings === 2 ? "🇮🇳 IND 1ST INN: 205/5 (20.0)" : "TARGET PROJECTION: 205"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(activeTab === "fullcard" ? "live" : "fullcard")}
+                    className="rounded-[3px] border border-[#E53945] bg-[#E53945]/15 px-2 py-0.5 text-[10px] font-bold uppercase text-[#E53945]"
+                  >
+                    {activeTab === "fullcard" ? "HIDE FULL CARD" : "📋 VIEW FULL SCORECARD"}
+                  </button>
+                </div>
               </div>
 
               <div className="p-3.5 sm:p-5">
@@ -1975,6 +2487,11 @@ export default function D11Application() {
                         ({matchState.oversDisplay} ov)
                       </span>
                     </div>
+                    {matchState.innings === 2 && (
+                      <div className="mt-1 text-xs font-bold text-[#FACC15]">
+                        🇦🇺 Need {matchState.runsNeeded} runs in {matchState.ballsRemaining} balls • 🇮🇳 IND: 205/5
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-1.5 text-right tabular-nums w-full sm:w-auto">
@@ -2013,7 +2530,7 @@ export default function D11Application() {
                 <table className="w-full text-left text-xs tabular-nums">
                   <thead>
                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[10px] font-bold uppercase text-[var(--text-muted)]">
-                      <th className="py-2 pl-3 pr-2">BATTING</th>
+                      <th className="py-2 pl-3 pr-2">ACTIVE CREASE BATTERS</th>
                       <th className="py-2 px-1.5 text-right">R</th>
                       <th className="py-2 px-1.5 text-right">B</th>
                       <th className="py-2 px-1.5 text-right">4s</th>
@@ -2058,6 +2575,9 @@ export default function D11Application() {
                 </div>
               </div>
             </section>
+
+            {/* Always show the Full Ball-1-to-Current-Ball Scorecard right below the live crease card as well */}
+            {activeTab !== "fullcard" && renderFullMatchScorecard()}
 
             <section className="rounded-[4px] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3.5">
               <div className="flex items-center justify-between text-[11px] font-bold uppercase text-[var(--text-muted)]">
@@ -2148,7 +2668,7 @@ export default function D11Application() {
         </div>
       </div>
 
-      {/* POPUP MODAL WHEN USER CLICKS "BACK ONLINE" (WITH FANTASY RECAP) */}
+      {/* POPUP MODAL WHEN USER CLICKS "BACK ONLINE" */}
       {showMatchMemoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4">
           <div className="w-full max-w-xl rounded-[4px] border-2 border-[#E53945] bg-[var(--surface-primary)] p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -2212,7 +2732,6 @@ export default function D11Application() {
               </div>
             </div>
 
-            {/* FANTASY IMPACT RECAP INSIDE RETURN MODAL */}
             <div className="mt-3">{renderFantasyImpactSection()}</div>
 
             <div className="mt-3 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-3.5 text-xs sm:text-sm leading-relaxed">
