@@ -13,7 +13,7 @@ const ALLOWED_CRICKET_KEYWORDS = [
   "kuldeep", "bumrah", "jasprit", "arshdeep", "singh", "career", "stats", "average",
   "strike rate", "century", "fifty", "world cup", "t20", "t20i", "ipl", "icc",
   "captain", "bowler", "batter", "batsman", "record", "history", "win", "lose",
-  "fantasy", "points", "bowling", "batting", "strength", "weakness", "scored",
+  "fantasy", "points", "bowling", "batting", "strength", "weakness", "scored", "avg",
   "मैच", "रन", "विकेट", "ओवर", "भारत", "ऑस्ट्रेलिया", "रोहित", "कोहली", "बुमराह", "हेड"
 ];
 
@@ -23,25 +23,35 @@ const OFF_TOPIC_PATTERNS = [
   "prime minister", "movie", "bollywood", "actor", "song", "math homework", "calculus"
 ];
 
-// Automatically finds GROQ_API_KEY from Vercel Env OR local ../backend/.env
 function resolveGroqApiKey(): string {
-  const fromEnv = (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || "")
-    .replace(/['"]/g, "")
-    .trim();
-  if (fromEnv && fromEnv !== "gsk_your_new_key_here") return fromEnv;
+  const candidates = [
+    process.env.GROQ_API_KEY,
+    process.env.NEXT_PUBLIC_GROQ_API_KEY,
+  ];
+  for (const c of candidates) {
+    const clean = (c || "").replace(/['"]/g, "").trim();
+    if (clean && clean !== "gsk_your_new_key_here") return clean;
+  }
 
-  // Fallback for local dev: read ../backend/.env automatically so localhost always works!
-  try {
-    const backendEnvPath = path.resolve(process.cwd(), "..", "backend", ".env");
-    if (fs.existsSync(backendEnvPath)) {
-      const content = fs.readFileSync(backendEnvPath, "utf8");
-      const match = content.match(/GROQ_API_KEY\s*=\s*([^\r\n#]+)/);
-      if (match && match[1]) {
-        return match[1].replace(/['"]/g, "").trim();
+  // Local dev fallback: read ../backend/.env or ./.env.local
+  const envPaths = [
+    path.resolve(process.cwd(), "..", "backend", ".env"),
+    path.resolve(process.cwd(), ".env"),
+    path.resolve(process.cwd(), ".env.local"),
+  ];
+  for (const p of envPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const content = fs.readFileSync(p, "utf8");
+        const match = content.match(/GROQ_API_KEY\s*=\s*([^\r\n#]+)/);
+        if (match && match[1]) {
+          const clean = match[1].replace(/['"]/g, "").trim();
+          if (clean) return clean;
+        }
       }
+    } catch {
+      // Ignore in serverless environment
     }
-  } catch {
-    // Ignore fs errors in serverless environments
   }
   return "";
 }
@@ -64,7 +74,7 @@ export async function POST(req: Request) {
           allowed: false,
           source: "guardrail",
           answer:
-            "🚫 **MatchMemo Guardrail:** मैं केवल **भारत बनाम ऑस्ट्रेलिया (IND vs AUS)** मैच, क्रिकेट टैक्टिक्स, और इस मैच में खेल रहे खिलाड़ियों के इस मैच के स्कोर व करियर रिकॉर्ड्स से जुड़े सवालों के जवाब दे सकता हूँ।",
+            "🚫 **MatchMemo Guardrail:** मैं केवल **भारत बनाम ऑस्ट्रेलिया (IND vs AUS)** मैच, क्रिकेट टैक्टिक्स, और इस मैच में खेल रहे खिलाड़ियों के स्कोर व करियर रिकॉर्ड्स से जुड़े सवालों के जवाब दे सकता हूँ।",
         });
       }
       return NextResponse.json({
@@ -75,10 +85,13 @@ export async function POST(req: Request) {
       });
     }
 
-    // 2. Call Groq API directly from Next.js Server (Same-Origin = Zero CORS Issues on Vercel!)
+    // 2. Call Groq API using Same-Origin Server Route
     const apiKey = resolveGroqApiKey();
+    const debugErrors: string[] = [];
 
-    if (apiKey) {
+    if (!apiKey) {
+      debugErrors.push("GROQ_API_KEY is missing in Vercel Environment Variables");
+    } else {
       const langInstruction =
         language === "hi"
           ? "Respond in engaging Cricket Hindi / Hinglish (2-4 sentences max) with relevant cricket emojis (🏏, 🔥, 🎯)."
@@ -87,8 +100,8 @@ export async function POST(req: Request) {
       const systemPrompt = `You are MatchMemo AI inside D11 ("Every ball matters"), an expert live cricket analyst for this India vs Australia T20 World Cup clash.
 
 STRICT RULES:
-1. If the user asks about a player's score/wickets IN THIS MATCH, ALWAYS use the exact numbers from the LIVE MATCH & FULL SCORECARD CONTEXT below! Never guess or make up current match numbers.
-2. If the user asks about a player's career stats, strengths, IPL/T20I records, or matchups, combine their real-world T20 career profile with what they have done in this match so far.
+1. If the user asks about a player's score/wickets IN THIS MATCH, ALWAYS use the exact numbers from the LIVE MATCH & FULL SCORECARD CONTEXT below.
+2. If the user asks about a player's career stats, bowling/batting average, strengths, IPL/T20I records, or matchups, provide their real-world T20/IPL career statistics AND mention their live match status.
 3. Only answer questions related to Cricket, India vs Australia, or the 22 squad players.
 4. ${langInstruction}
 
@@ -100,42 +113,36 @@ ${matchContext}`;
         "Content-Type": "application/json",
       };
 
-      // Discover allowed Groq models dynamically
-      let modelsToTry = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "gemma2-9b-it",
-      ];
-
+      // Discover exact models enabled for this key on Groq
+      let discoveredModels: string[] = [];
       try {
         const modelsRes = await fetch("https://api.groq.com/openai/v1/models", {
           headers,
-          signal: AbortSignal.timeout(6000),
+          cache: "no-store",
         });
         if (modelsRes.ok) {
           const modelsData = await modelsRes.json();
-          const discovered = (modelsData.data || [])
+          discoveredModels = (modelsData.data || [])
             .map((m: { id: string }) => m.id)
-            .filter(
-              (id: string) =>
-                !id.includes("whisper") &&
-                !id.includes("guard") &&
-                !id.includes("tts") &&
-                !id.includes("orpheus")
-            );
-          // Prefer Llama / Qwen / Gemma / DeepSeek text models first
-          const preferred = discovered.sort((a: string, b: string) => {
-            const score = (s: string) =>
-              s.includes("llama-3") ? 3 : s.includes("gemma") || s.includes("qwen") ? 2 : 1;
-            return score(b) - score(a);
-          });
-          if (preferred.length > 0) {
-            modelsToTry = preferred.slice(0, 5);
-          }
+            .filter((id: string) => !id.includes("whisper"));
+        } else {
+          debugErrors.push(`models_endpoint_${modelsRes.status}`);
         }
-      } catch {
-        // Keep default list if model discovery times out
+      } catch (e) {
+        debugErrors.push(`models_fetch_err_${String(e)}`);
       }
+
+      // Combine discovered models with standard Groq chat models, prioritizing text/chat models
+      const priorityOrder = [
+        "allam-2-7b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "gemma2-9b-it",
+        "qwen-qwq-32b",
+        "mistral-saba-24b",
+        ...discoveredModels,
+      ];
+      const modelsToTry = Array.from(new Set(priorityOrder)).slice(0, 8);
 
       for (const modelName of modelsToTry) {
         try {
@@ -151,47 +158,39 @@ ${matchContext}`;
               temperature: 0.4,
               max_tokens: 220,
             }),
-            signal: AbortSignal.timeout(10000),
+            cache: "no-store",
           });
 
           if (chatRes.ok) {
             const data = await chatRes.json();
             const answerText = data?.choices?.[0]?.message?.content;
-            if (answerText) {
+            if (answerText && answerText.trim().length > 0) {
               return NextResponse.json({
                 allowed: true,
                 source: `groq-${modelName}`,
                 answer: answerText.trim(),
               });
             }
+          } else {
+            debugErrors.push(`${modelName}:${chatRes.status}`);
           }
-        } catch {
-          // Try next model in waterfall
+        } catch (err) {
+          debugErrors.push(`${modelName}:err`);
         }
       }
     }
 
-    // 3. If GROQ_API_KEY wasn't in Vercel env, try proxying to local FastAPI (127.0.0.1:8000)
-    try {
-      const localFastApi = await fetch("http://127.0.0.1:8000/matches/ind-aus-thriller/ask-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(6000),
-      });
-      if (localFastApi.ok) {
-        const localData = await localFastApi.json();
-        return NextResponse.json(localData);
-      }
-    } catch {
-      // Ignore if not on localhost
-    }
-
-    return NextResponse.json(
-      { error: "No active LLM provider responded" },
-      { status: 503 }
-    );
+    // 3. Return 200 with fallback_needed: true so browser never hits 503 or CORS errors!
+    return NextResponse.json({
+      allowed: true,
+      fallback_needed: true,
+      debug_reason: debugErrors.join(", ") || "no_key_or_models",
+    });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({
+      allowed: true,
+      fallback_needed: true,
+      debug_reason: String(err),
+    });
   }
 }

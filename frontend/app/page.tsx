@@ -1134,40 +1134,41 @@ MISSED WINDOW: ${matchMemoData.missedCount} balls (+${matchMemoData.runsAdded}R,
         // Proceed to direct backend check if needed
       }
 
-      // 2. Secondary Check: Direct FastAPI URL (for local development if needed)
-      try {
-        const res = await fetch(`${API_BASE}/matches/ind-aus-thriller/ask-ai`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question: q,
-            language: memoLang,
-            match_context: contextSummary,
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const elapsed = Math.round(performance.now() - startTime);
-          if (data.answer) {
-            setAiResponse(data.answer);
-            setAiSource(data.source || "groq-llm");
-            setBackendOnline(true);
-            setTelemetryLog({
-              latencyMs: elapsed,
-              provider: data.source || "groq-llm",
-              guardrailStatus: data.allowed === false ? "BLOCKED" : "PASS",
-              fallbackTriggered: data.source === "d11-intelligence-engine",
-              timestamp: new Date().toISOString(),
-              lastQuestion: q,
-            });
-            setAiLoading(false);
-            return;
+      // 2. Secondary Check: Only call direct FastAPI on localhost so Vercel never triggers CORS errors
+      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+        try {
+          const res = await fetch(`${API_BASE}/matches/ind-aus-thriller/ask-ai`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question: q,
+              language: memoLang,
+              match_context: contextSummary,
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const elapsed = Math.round(performance.now() - startTime);
+            if (data.answer) {
+              setAiResponse(data.answer);
+              setAiSource(data.source || "groq-llm");
+              setBackendOnline(true);
+              setTelemetryLog({
+                latencyMs: elapsed,
+                provider: data.source || "groq-llm",
+                guardrailStatus: data.allowed === false ? "BLOCKED" : "PASS",
+                fallbackTriggered: data.source === "d11-intelligence-engine",
+                timestamp: new Date().toISOString(),
+                lastQuestion: q,
+              });
+              setAiLoading(false);
+              return;
+            }
           }
+        } catch {
+          // Local backend not running, use local intelligence below
         }
-      } catch {
-        // Gracefully degrade to deterministic match + career engine below
       }
-    }
 
     const elapsed = Math.max(1, Math.round(performance.now() - startTime));
     const qLower = q.toLowerCase();
